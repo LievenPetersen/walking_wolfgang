@@ -1,23 +1,22 @@
 import Simulation
-import time
 import timekeeper
 import random
+import pybullet
 
 
 if __name__ == "__main__":
 
     print("loading...")
     sim = Simulation.Simulation(True)
-    keeper = timekeeper.Timekeeper()
-    print("ready")
+    print("simulation loaded\n")
+    physicsClientId = sim.client_id
+    keeper = timekeeper.Timefixer()
 
     jointList = []
     for joint in sim.joints:
         jointList.append(joint)
 
-    print("running")
-
-    while True:
+    while pybullet.isConnected(physicsClientId):
         key = jointList[random.randint(0, len(jointList)-1)]
         j = sim.joints.get(key)
 
@@ -29,4 +28,4 @@ if __name__ == "__main__":
 
         keeper.physicsStep(sim)
 
-    print("simulation terminated")
+    print("\n--simulation terminated--")

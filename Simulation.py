@@ -24,7 +24,6 @@ class Simulation:
                                          "LShoulderPitch": 0, "LShoulderRoll": 0, "LElbow": 45, "RShoulderPitch": 0,
                                          "RShoulderRoll": 0, "RElbow": -45, "HeadPan": 0, "HeadTilt": 0}
 
-
         # Instantiating Bullet
         if self.gui:
             self.client_id = p.connect(p.GUI)
@@ -98,10 +97,13 @@ class Simulation:
         p.resetBaseVelocity(self.robot_index, [0, 0, 0], [0, 0, 0])
 
     def step(self):
+        if not p.isConnected(self.client_id):
+            return
+
         # get keyboard events if gui is active
         single_step = False
         if self.gui:
-            # rest if R-key was pressed
+            # reset if R-key was pressed
             rKey = ord('r')
             nKey = ord('n')
             sKey = ord('s')
@@ -119,6 +121,11 @@ class Simulation:
                 else:
                     p.setGravity(0, 0, -9.81)
                 self.gravity = not self.gravity
+
+            backspace_key = p.B3G_BACKSPACE
+            if backspace_key in keys and keys[backspace_key] & p.KEY_WAS_TRIGGERED:
+                p.disconnect(self.client_id)
+                return
 
         # check if simulation should continue currently
         if not self.paused or single_step:
