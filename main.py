@@ -1,31 +1,29 @@
-import Simulation
-import timekeeper
-import random
 import pybullet
+import simulation
 
+import wolfgang_control
+import timekeeper
+import main
 
 if __name__ == "__main__":
+    s = main.Scheduler()
+    s.run_sim()
 
-    print("loading...")
-    sim = Simulation.Simulation(True)
-    print("simulation loaded\n")
-    physicsClientId = sim.client_id
-    keeper = timekeeper.Timefixer()
 
-    jointList = []
-    for joint in sim.joints:
-        jointList.append(joint)
+class Scheduler:
+    def __init__(self):
+        print("loading...")
+        self.sim = simulation.Simulation(True)
+        print("simulation loaded\n")
 
-    while pybullet.isConnected(physicsClientId):
-        key = jointList[random.randint(0, len(jointList)-1)]
-        j = sim.joints.get(key)
+        self.physicsClientId = self.sim.client_id
 
-        if isinstance(j, Simulation.Joint):
-            j.set_position(random.randrange(int(j.lowerLimit), int(j.upperLimit)))
-            # print(key)
-        else:
-            print(j.__str__())
+        self.control_system = wolfgang_control.SpasmBot(self.sim)
+        self.keeper = timekeeper.Timefixer()
 
-        keeper.physicsStep(sim)
+    def run_sim(self):
+        while pybullet.isConnected(self.physicsClientId):
+            self.control_system.step(self.sim)  # move the bot
+            self.keeper.physicsStep(self.sim)  # step physics
 
-    print("\n--simulation terminated--")
+        print("\n--simulation terminated--")

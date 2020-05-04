@@ -88,7 +88,9 @@ class Timefixer:
 
     # Should be called before the sim step
     def preStep(self):
-        time.sleep((self.desired_loop_time - (time.time_ns() - self.post_step_time) - self.error_over_time) / 1000000000)  # nano->sec
+        sleep_time = (self.desired_loop_time - (time.time_ns() - self.post_step_time) - self.error_over_time)/1000000000
+        if sleep_time > 0:
+            time.sleep(sleep_time)  # some time has passed since time.time_ns() but  error_over_time will correct that
         self.preStepTime = time.time_ns()
 
     # Should be called after the sim step
@@ -100,8 +102,8 @@ class Timefixer:
         error = self.actual_loop_time - self.desired_loop_time
         self.error_over_time += error
 
-        """
         # debug
+        """
         if len(self.looptimes) > 200:
             self.looptimes.popleft()
         self.looptimes.append(self.actual_loop_time)
@@ -111,9 +113,10 @@ class Timefixer:
             average_looptime += x
         average_looptime /= len(self.looptimes)
         
-        """
+
         # print(int(self.error_over_time), int(error), int(self.error_over_time - error), int(average_looptime))
-        # use for debug
+        """
+        # end debug
 
     # prints and returns how much percent of your time have passed since the last step (last call of postStep)
     def timeLeft(self):
