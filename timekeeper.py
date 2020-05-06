@@ -1,14 +1,15 @@
 import time
 import _collections
+from simulation import Simulation
 
 
 # keeps the sim in realtime (mostly overkill)
 class Timekeeper:
-    def __init__(self):
+    def __init__(self, sim: Simulation):
         self.post_step_time = time.time_ns()  # when the last step ended
         self.preStepTime = time.time_ns()  # when the last step began
 
-        self.desired_loop_time = 1000000000 / 240  # desired time for the entire loop
+        self.desired_loop_time = 1000000000 * sim.time_step   # desired time for the entire loop
         self.actual_loop_time = 0  # actual time the timekeeper achieved
 
         self.delay = 0  # actual-desired loop time
@@ -16,13 +17,13 @@ class Timekeeper:
 
         self.average_step_duration = 0  # estimate how much time a step takes (most times very small to 0)
 
-    def physicsStep(self, sim):
+    def physicsStep(self, sim: Simulation):
         self.preStep()
         sim.step()
         self.postStep()
 
     # if timeUse = True reports how much time you are using between physics steps
-    def physicsStepT(self, sim):
+    def physicsStepT(self, sim: Simulation):
         self.timeLeft()
         self.physicsStep(sim)
 
@@ -62,11 +63,11 @@ class Timekeeper:
 
 # keeps the sim in realtime (mostly overkill)
 class Timefixer:
-    def __init__(self):
+    def __init__(self, sim: Simulation):
         self.post_step_time = time.time_ns()  # when the last step ended
         self.preStepTime = time.time_ns()  # when the last step began
 
-        self.desired_loop_time = 1000000000 / 240  # desired time for the entire loop
+        self.desired_loop_time = 1000000000 * sim.time_step  # desired time for the entire loop
         self.actual_loop_time = 0  # actual time the timekeeper achieved
 
         self.average_error = 0
@@ -76,13 +77,13 @@ class Timefixer:
 
         self.looptimes = _collections.deque()
 
-    def physicsStep(self, sim):
+    def physicsStep(self, sim: Simulation):
         self.preStep()
         sim.step()
         self.postStep()
 
     # if timeUse = True reports how much time you are using between physics steps
-    def physicsStepT(self, sim):
+    def physicsStepT(self, sim: Simulation):
         self.timeLeft()
         self.physicsStep(sim)
 

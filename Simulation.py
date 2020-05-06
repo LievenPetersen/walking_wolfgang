@@ -1,12 +1,11 @@
-#!/usr/bin/env python3
-import math
-import sys
-import time
-import pybullet as p
-from time import sleep
+"""
+this file has been altered, original file:
+https://github.com/bit-bots/wolfgang_robot/blob/master/wolfgang_pybullet_sim/src/wolfgang_pybullet_sim/simulation.py
+"""
 
+import math
+import pybullet as p
 import pybullet_data
-# import rospkg
 
 
 class Simulation:
@@ -41,17 +40,15 @@ class Simulation:
                          rollingFriction=0.1, restitution=0.9)
 
         # Loading robot
-        # rospack = rospkg.RosPack()
-        # path = rospack.get_path("wolfgang_description")
         flags = p.URDF_USE_INERTIA_FROM_FILE
         self.robot_index = p.loadURDF("/urdf/robot.urdf",
                                       self.start_position, self.start_orientation, flags=flags)
 
         # Engine parameters
         # time step should be at 240Hz (due to pyBullet documentation)
-        self.timestep = 1/240
+        self.time_step = 1 / 240
         # standard parameters seem to be best. leave them like they are
-        # p.setPhysicsEngineParameter(fixedTimeStep=self.timestep, numSubSteps=1)
+        # p.setPhysicsEngineParameter(fixedTimeStep=self.time_step, numSubSteps=1)
         # no real time, as we will publish own clock
         p.setRealTimeSimulation(0)
 
@@ -129,7 +126,7 @@ class Simulation:
 
         # check if simulation should continue currently
         if not self.paused or single_step:
-            self.time += self.timestep
+            self.time += self.time_step
             p.stepSimulation()
 
     def get_robot_pose(self):
