@@ -1,6 +1,7 @@
-import simulation
 import random
 import math
+
+import simulation
 
 
 class Bot:
