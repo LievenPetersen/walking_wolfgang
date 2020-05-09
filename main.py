@@ -19,14 +19,14 @@ class Scheduler:
         print("simulation loaded\n")
 
         self.interface = sim_interface.SimInterface(self.sim)
-        self.control_system = wolfgang_control.SpasmBot(self.sim)
-        self.keeper = timekeeper.Timefixer(self.sim)
+        self.timer = timekeeper.Timefixer(self.sim)
 
-        #  print(self.interface.get_foot_pressure()[0].left_back)
+        # chose the control-system for the bot. TODO: make switching more convenient i.e. switching on the fly possible
+        self.control_system = wolfgang_control.SquadBot(self.interface)
 
     def run_sim(self):
         while pybullet.isConnected(self.physicsClientId):
-            self.control_system.step(self.sim)  # move the bot
-            self.keeper.physicsStep(self.sim)  # step physics
+            self.control_system.step()  # move the bot
+            self.timer.physicsStep(self.sim)  # step physics
 
         print("\n--simulation terminated--")
