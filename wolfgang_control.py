@@ -1,6 +1,8 @@
 import random
 import math
 
+import abc
+
 import simulation
 from sim_interface import SimInterface
 
@@ -40,6 +42,11 @@ class Bot:
     @classmethod
     def __init__(cls, interface: SimInterface):
         cls.interface = interface
+
+    @classmethod
+    @abc.abstractmethod
+    def step(cls):
+        pass
 
     @classmethod
     def update_controllers(cls):

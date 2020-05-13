@@ -141,3 +141,6 @@ cython_debug/
 __pycache__/
 __pycache__/main.cpython-37.pyc
 *.pyc
+pdControllerExplicit.py
+pdControllerStable.py
+s.py
