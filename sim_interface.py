@@ -130,3 +130,9 @@ class SimInterface:
         self.simulation.set_filter_params(config["cutoff"], config["order"])
         return config
     """
+
+    def get_initial_joint_position(self, joint_name):
+        return self.simulation.initial_joints_positions.get(joint_name)
+
+    def get_joint(self, name):
+        return self.simulation.joints.get(name)

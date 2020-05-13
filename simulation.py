@@ -33,6 +33,10 @@ class Simulation:
         # disable debug interface, only show robot
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, False)
 
+        # set camera angle
+        p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=45, cameraPitch=-10,
+                                     cameraTargetPosition=self.start_position)
+
         # Loading floor
         p.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
         self.plane_index = p.loadURDF('plane.urdf')
@@ -159,11 +163,18 @@ class Joint:
                                 controlMode=p.POSITION_CONTROL, targetPosition=0, targetVelocity=0,
                                 positionGain=0.1, velocityGain=0.1, force=0)
 
-    def set_position(self, position):
-        p.setJointMotorControl2(self.body_index, self.joint_index,
-                                p.POSITION_CONTROL,
-                                targetPosition=position, force=self.max_force,
-                                maxVelocity=self.max_velocity)
+    def set_position(self, position, velocity=False):
+        if velocity == False:
+            p.setJointMotorControl2(self.body_index, self.joint_index, p.POSITION_CONTROL,
+                                    targetPosition=position, force=self.max_force, maxVelocity=self.max_velocity)
+        else:
+            p.setJointMotorControl2(self.body_index, self.joint_index, p.POSITION_CONTROL,
+                                    targetPosition=position, targetVelocity=velocity, force=self.max_force,
+                                    maxVelocity=self.max_velocity)
+
+    def set_velocity(self, velocity):
+        p.setJointMotorControl2(self.body_index, self.joint_index, p.VELOCITY_CONTROL,
+                                targetVelocity=velocity, force=self.max_force, maxVelocity=self.max_velocity)
 
     def get_state(self):
         position, velocity, forces, applied_torque = p.getJointState(self.body_index, self.joint_index)
