@@ -16,10 +16,10 @@ class Simulation:
 
         # config values
         self.start_position = [0, 0, 0.43]
-        self.start_orientation = p.getQuaternionFromEuler((0, 0.25, 0))
-        self.initial_joints_positions = {"LAnklePitch": -30, "LAnkleRoll": 0, "LHipPitch": 30, "LHipRoll": 0,
-                                         "LHipYaw": 0, "LKnee": -60, "RAnklePitch": 30, "RAnkleRoll": 0,
-                                         "RHipPitch": -30, "RHipRoll": 0, "RHipYaw": 0, "RKnee": 60,
+        self.start_orientation = p.getQuaternionFromEuler((0, 0.13, 0))
+        self.initial_joints_positions = {"LAnklePitch": -26, "LAnkleRoll": 0, "LHipPitch": 26, "LHipRoll": 0,
+                                         "LHipYaw": 0, "LKnee": -60, "RAnklePitch": 26, "RAnkleRoll": 0,
+                                         "RHipPitch": -26, "RHipRoll": 0, "RHipYaw": 0, "RKnee": 60,
                                          "LShoulderPitch": 0, "LShoulderRoll": 0, "LElbow": 45, "RShoulderPitch": 0,
                                          "RShoulderRoll": 0, "RElbow": -45, "HeadPan": 0, "HeadTilt": 0}
 
@@ -154,6 +154,7 @@ class Joint:
         self.lowerLimit = joint_info[8]
         self.upperLimit = joint_info[9]
 
+    # position and velocity are in radians
     def reset_position(self, position, velocity):
         p.resetJointState(self.body_index, self.joint_index, targetValue=position, targetVelocity=velocity)
         # self.disable_motor()
@@ -163,18 +164,18 @@ class Joint:
                                 controlMode=p.POSITION_CONTROL, targetPosition=0, targetVelocity=0,
                                 positionGain=0.1, velocityGain=0.1, force=0)
 
-    def set_position(self, position, velocity=False):
-        if velocity == False:
-            p.setJointMotorControl2(self.body_index, self.joint_index, p.POSITION_CONTROL,
-                                    targetPosition=position, force=self.max_force, maxVelocity=self.max_velocity)
-        else:
-            p.setJointMotorControl2(self.body_index, self.joint_index, p.POSITION_CONTROL,
-                                    targetPosition=position, targetVelocity=velocity, force=self.max_force,
-                                    maxVelocity=self.max_velocity)
+    def set_position(self, position):
+        p.setJointMotorControl2(self.body_index, self.joint_index, p.POSITION_CONTROL,
+                                targetPosition=position, force=self.max_force,
+                                maxVelocity=self.max_velocity)
 
     def set_velocity(self, velocity):
         p.setJointMotorControl2(self.body_index, self.joint_index, p.VELOCITY_CONTROL,
                                 targetVelocity=velocity, force=self.max_force, maxVelocity=self.max_velocity)
+
+    def set_torque(self, torque):
+        p.setJointMotorControl2(self.body_index, self.joint_index, p.VELOCITY_CONTROL,
+                                force=torque, maxVelocity=self.max_velocity)
 
     def get_state(self):
         position, velocity, forces, applied_torque = p.getJointState(self.body_index, self.joint_index)

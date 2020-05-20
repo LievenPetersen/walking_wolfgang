@@ -138,9 +138,6 @@ dmypy.json
 cython_debug/
 *.pyc
 .idea/
-__pycache__/
-__pycache__/main.cpython-37.pyc
 *.pyc
-pdControllerExplicit.py
-pdControllerStable.py
-s.py
+__pycache__/main.cpython-37.pyc
+__pycache__/wolfgang_control.cpython-37.pyc
