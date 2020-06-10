@@ -30,7 +30,7 @@ class Simulation:
             self.client_id = p.connect(p.SHARED_MEMORY_SERVER)
         p.setGravity(0, 0, -9.81)
         self.time = 0
-        # disable debug interface, only show robot
+        # disable DEBUG interface, only show robot
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, False)
 
         # set camera angle
@@ -140,6 +140,9 @@ class Simulation:
     def get_robot_velocity(self):
         (vx, vy, vz), (vr, vp, vy) = p.getBaseVelocity(self.robot_index)
         return (vx, vy, vz), (vr, vp, vy)
+
+    def get_robot_id(self):
+        return self.robot_index
 
 
 class Joint:

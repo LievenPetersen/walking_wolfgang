@@ -1,14 +1,9 @@
 import pybullet
 
-import main
 import simulation
-import wolfgang_control
+import bots
 import timekeeper
 import sim_interface
-
-if __name__ == "__main__":
-    scheduler = main.Scheduler()
-    scheduler.run_sim()
 
 
 class Scheduler:
@@ -22,11 +17,17 @@ class Scheduler:
         self.timer = timekeeper.Timefixer(self.sim)
 
         # chose the control-system for the bot. TODO: make switching more convenient i.e. switching on the fly possible
-        self.control_system = wolfgang_control.TorgeBot(self.interface)
+        self.control_system = bots.SlowMoBot(self.interface)
 
     def run_sim(self):
         while pybullet.isConnected(self.physicsClientId):
-            self.control_system.step()  # updates the bots' control-system
+            if not self.sim.paused:
+                self.control_system.step()  # updates the bots' control-system
             self.timer.physicsStep(self.sim)  # step physics
 
         print("\n--simulation terminated--")
+
+
+if __name__ == "__main__":
+    scheduler = Scheduler()
+    scheduler.run_sim()

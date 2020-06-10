@@ -103,7 +103,7 @@ class Timefixer:
         error = self.actual_loop_time - self.desired_loop_time
         self.error_over_time += error
 
-        # debug
+        # DEBUG
         """
         if len(self.looptimes) > 200:
             self.looptimes.popleft()
@@ -117,7 +117,7 @@ class Timefixer:
 
         # print(int(self.error_over_time), int(error), int(self.error_over_time - error), int(average_looptime))
         """
-        # end debug
+        # end DEBUG
 
     # prints and returns how much percent of your time have passed since the last step (last call of postStep)
     def timeLeft(self):
