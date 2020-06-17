@@ -119,16 +119,16 @@ class Leg(Controller):
         self.init_starting_triangle()
 
     def init_starting_triangle(self):
-        self.angle_b = - math.pi * self.side - self.knee.initial_position + self.knee_offset
+        self.angle_b = - math.pi * self.side + self.knee.initial_position + self.knee_offset
         b_side = math.sqrt(self.knee_ankle_length * self.knee_ankle_length + self.hip_knee_length * self.hip_knee_length
                            - 2 * self.knee_ankle_length * self.hip_knee_length * math.cos(self.angle_b))  # law of cosines
         a_angle = math.asin(self.knee_ankle_length * math.sin(self.angle_b) / b_side)  # law of sines
         c_angle = math.asin(self.hip_knee_length * math.sin(self.angle_b) / b_side)  # law of sines
 
-        self.current_angle = self.hip.initial_position + a_angle
+        self.current_angle = self.hip.initial_position - a_angle
 
-        self.angle_a = a_angle * -self.side
-        self.angle_c = c_angle * self.side
+        self.angle_a = a_angle * self.side
+        self.angle_c = c_angle * -self.side
         self.current_length = b_side
         print("Initialization:: angles:", a_angle, self.angle_b, c_angle, "lengths:", self.knee_ankle_length, b_side, self.hip_knee_length)
 
@@ -157,9 +157,9 @@ class Leg(Controller):
         # !!! angles has to be side adjusted !!!
 
         # calculate motor positions
-        hip_position = self.current_angle + angles[0] * self.side
-        knee_position = (angles[1] - math.pi) * self.side + self.knee_offset
-        ankle_position = -self.current_angle - angles[2] * self.side
+        hip_position = self.current_angle - angles[0] * self.side
+        knee_position = (-angles[1] + math.pi) * self.side - self.knee_offset
+        ankle_position = -self.current_angle + angles[2] * self.side
 
         # issue command
         self.hip.reach_position_in_time(hip_position, time)
