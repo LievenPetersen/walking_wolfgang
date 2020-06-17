@@ -29,7 +29,7 @@ class Timekeeper:
 
     # Should be called before the sim step
     def preStep(self):
-        time.sleep((self.desired_loop_time - (time.time_ns() - self.post_step_time) - self.delay) / 1000000000)  # nano->sec
+        time.sleep((self.desired_loop_time-(time.time_ns()-self.post_step_time)-self.delay) / 1000000000)  # nano->sec
         self.preStepTime = time.time_ns()
 
     # Should be called after the sim step

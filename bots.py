@@ -39,7 +39,7 @@ class Bot(abc.ABC):
     def create_leg_controller(self, side: int):
         assert side is 1 or side is -1  # +1 means right, -1 means left side.
 
-        if side == 1:
+        if side == 1:  # TODO this is the wrong way around. fixing it means refactoring of ik code
             hip_pitch = self.create_motor_controller("LHipPitch")
             knee = self.create_motor_controller("LKnee")
             ankle_pitch = self.create_motor_controller("LAnklePitch")
@@ -122,26 +122,46 @@ class SquatBot(Bot):
 class SlowMoBot(Bot):
     def __init__(self, interface: SimInterface):
         super().__init__(interface)
-
-        self.r_leg = self.create_leg_controller(1)
-        self.l_leg = self.create_leg_controller(-1)
-
-        # self.l_leg.null()
-        # self.r_leg.null()
-
         self.i = 0
 
-        # self.l_leg.extend_to(self.l_leg.length_upper_limit, 1)
-        # self.r_leg.extend_to(self.r_leg.length_upper_limit, 1)
+        self.l_leg = self.create_leg_controller(1)
+        self.r_leg = self.create_leg_controller(-1)
+
+        self.r_hip_roll = self.create_motor_controller("RHipRoll")
+        self.l_hip_roll = self.create_motor_controller("LHipRoll")
+        self.r_ankle_roll = self.create_motor_controller("RAnkleRoll")
+        self.l_ankle_roll = self.create_motor_controller("LAnkleRoll")
 
     def update(self):
-        # self.l_leg.knee.joint.set_position(self.l_leg.angle_b + self.l_leg.knee_offset + math.pi)
-
+        """
         if self.i % (240 * 6) == 240 * 1:
-            self.r_leg.extend_relative(-0.2, 2)
-            self.l_leg.extend_relative(-0.2, 2)
+            self.l_leg.move_relative(-0, 1, 0.1)
+            self.r_leg.move_relative(-0, 1, -0.1)
+            # self.l_leg.move(self.l_leg.current_length, 0.1, self.l_leg.current_angle)
+            # self.r_leg.move(self.r_leg.current_length, 0.1, self.r_leg.current_angle)
+        if self.i % (240 * 6) == 240 * 4:
+            self.l_leg.move_relative(-0, 1, -0.1)
+            self.r_leg.move_relative(-0, 1, 0.1)
+        """
+        """
+        if self.i % (240 * 6) == 240 * 0:
 
-        elif self.i % (240 * 6) == 240 * 4:
+            roll = 0.23
+            time = 1
+            self.r_hip_roll.reach_position_in_time(roll, time)
+            self.l_hip_roll.reach_position_in_time(roll, time)
+            self.r_ankle_roll.reach_position_in_time(roll, time)
+            self.l_ankle_roll.reach_position_in_time(roll, time)
+        """
+        if self.i % (240 * 6) == 240 * 1:
+            self.l_leg.extend_relative(0, 1/3)
+            self.r_leg.extend_relative(0, 1/3)
+
+        if self.i % (240 * 6) == 240 * 2:
+            self.l_leg.extend_relative(-0.2, 2)
+            self.r_leg.extend_relative(-0.2, 2)
+
+        elif self.i % (240 * 6) == 240 * 5:
             self.l_leg.extend_relative(0.2, 2)
             self.r_leg.extend_relative(0.2, 2)
 

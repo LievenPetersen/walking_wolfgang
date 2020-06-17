@@ -43,10 +43,6 @@ class MotorController(Controller):
         else:
             self.side = 1
 
-        self.leg_triangle_angle_conversion = 0
-        if self.offsets.get(self.name):
-            self.leg_triangle_angle_conversion = self.offsets.get(self.name)
-
     def update(self):
         if self.current_target_time is not 0 and self.current_target_time <= self.interface.simulation.time:
             self.joint.set_position(self.current_target_position)
@@ -131,8 +127,7 @@ class Leg(Controller):
 
         self.current_angle = self.hip.initial_position + a_angle
 
-
-        self.angle_a = a_angle * - self.side
+        self.angle_a = a_angle * -self.side
         self.angle_c = c_angle * self.side
         self.current_length = b_side
         print("Initialization:: angles:", a_angle, self.angle_b, c_angle, "lengths:", self.knee_ankle_length, b_side, self.hip_knee_length)
@@ -140,10 +135,20 @@ class Leg(Controller):
     def update(self):
         pass
 
+    def move_relative(self, length_difference, time, angle_difference):
+        self.current_angle += angle_difference
+        self.extend_relative(length_difference, time)
+
+    def move(self, length, time, angle):
+        self.current_angle = angle
+        self.extend_to(length, time)
+
     def extend_relative(self, length_difference, time):
         self.extend_to(self.current_length + length_difference, time)
 
     def extend_to(self, length, time):
+        assert 0 < length <= self.length_upper_limit  # leg length is within limits
+
         # abc corresponds to my notes; a is the lower leg, b is the desired length and c is the upper leg
         c = self.hip_knee_length  # this should probably be refactored later (insert directly)
         a = self.knee_ankle_length
@@ -154,7 +159,7 @@ class Leg(Controller):
         # calculate motor positions
         hip_position = self.current_angle + angles[0] * self.side
         knee_position = (angles[1] - math.pi) * self.side + self.knee_offset
-        ankle_position = - angles[2] * self.side
+        ankle_position = -self.current_angle - angles[2] * self.side
 
         # issue command
         self.hip.reach_position_in_time(hip_position, time)
@@ -174,6 +179,6 @@ class Leg(Controller):
         return math.acos((a*a+b*b-c*c)/(2*a*b))  # cos^-1(law of cosines)
 
     def null(self):
-        self.hip.joint.set_position(self.hip.leg_triangle_angle_conversion)
-        self.knee.joint.set_position(self.knee.leg_triangle_angle_conversion + math.radians(180) * self.side)
-        self.ankle.joint.set_position(self.ankle.leg_triangle_angle_conversion)
+        self.hip.joint.set_position(self.hip_offset)
+        self.knee.joint.set_position(self.knee_offset)
+        self.ankle.joint.set_position(self.ankle_offset)
