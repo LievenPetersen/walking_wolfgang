@@ -34,7 +34,7 @@ class Simulation:
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, False)
 
         # set camera angle
-        p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=45, cameraPitch=-10,
+        p.resetDebugVisualizerCamera(cameraDistance=0.7, cameraYaw=0, cameraPitch=-10,
                                      cameraTargetPosition=self.start_position)
 
         # Loading floor
