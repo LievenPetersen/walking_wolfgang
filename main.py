@@ -5,6 +5,8 @@ import bots
 import timekeeper
 import sim_interface
 
+# switch between bots here!
+
 
 class Scheduler:
     def __init__(self):
@@ -17,7 +19,7 @@ class Scheduler:
         self.timer = timekeeper.Timefixer(self.sim)
 
         # chose the control-system for the bot. TODO: make switching more convenient i.e. switching on the fly possible
-        self.control_system = bots.SlowMoBot(self.interface)
+        self.control_system = bots.SlowMoBot(self.interface)  # bots.<CurrentBot>(self.interface)
 
     def run_sim(self):
         while pybullet.isConnected(self.physicsClientId):

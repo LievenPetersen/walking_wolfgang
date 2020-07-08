@@ -65,8 +65,6 @@ class SmoothMotorController(Controller):
             self.moving = False
             self.current_start_position = self.current_target_position
             self.joint.set_position(self.current_target_position)
-            if self.name is "RKnee":
-                print("move ended", self.current_target_position - self.joint.get_position())
 
         elif self.moving:
             self.joint.set_position(self.get_current_position())
@@ -271,7 +269,6 @@ class Leg(Controller):
     def move_relative(self, length_difference, angle_difference, time):
         self.current_angle += angle_difference
         self.extend_relative(length_difference, time)
-        print(self.current_angle)
 
     def move(self, length, angle, time):
         self.current_angle = angle
