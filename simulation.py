@@ -12,6 +12,7 @@ class Simulation:
     def __init__(self, gui):
         self.gui = gui
         self.paused = False
+        self.follow_camera = False
         self.gravity = True
 
         # config values
@@ -108,6 +109,7 @@ class Simulation:
             rKey = ord('r')
             nKey = ord('n')
             sKey = ord('s')
+            fKey = ord('f')
             spaceKey = p.B3G_SPACE
             keys = p.getKeyboardEvents()
             if rKey in keys and keys[rKey] & p.KEY_WAS_TRIGGERED:
@@ -123,6 +125,8 @@ class Simulation:
                     p.setGravity(0, 0, -9.81)
                 self.gravity = not self.gravity
 
+            if fKey in keys and keys[fKey] and p.KEY_WAS_TRIGGERED:
+                self.follow_camera = not self.follow_camera
             backspace_key = p.B3G_BACKSPACE
             if backspace_key in keys and keys[backspace_key] & p.KEY_WAS_TRIGGERED:
                 p.disconnect(self.client_id)
@@ -132,6 +136,10 @@ class Simulation:
         if not self.paused or single_step:
             self.time += self.time_step
             p.stepSimulation()
+            if self.follow_camera:
+                camera = p.getDebugVisualizerCamera()
+                p.resetDebugVisualizerCamera(cameraDistance=camera[10], cameraYaw=camera[8], cameraPitch=camera[9],
+                                             cameraTargetPosition=p.getBasePositionAndOrientation(self.robot_index)[0])
 
     def get_robot_pose(self):
         (x, y, z), (qx, qy, qz, qw) = p.getBasePositionAndOrientation(self.robot_index)
