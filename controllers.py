@@ -268,12 +268,12 @@ class Leg(Controller):
     def update(self):
         pass
 
-    def move_relative(self, length_difference, time, angle_difference):
+    def move_relative(self, length_difference, angle_difference, time):
         self.current_angle += angle_difference
         self.extend_relative(length_difference, time)
         print(self.current_angle)
 
-    def move(self, length, time, angle):
+    def move(self, length, angle, time):
         self.current_angle = angle
         self.extend_to(length, time)
 

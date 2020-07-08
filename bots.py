@@ -170,36 +170,67 @@ class SlowMoBot(Bot):
         self.r_ankle_roll = self.create_smooth_motor_controller("RAnkleRoll")
         self.l_ankle_roll = self.create_smooth_motor_controller("LAnkleRoll")
 
+        self.walking = False
+
     def update(self):
-        if self.i % (240 * 6) == 240 * 1:
-            self.r_leg.move_relative(0, 1, 0.2)
-            self.l_leg.move_relative(0, 1, -0.2)
-            # self.r_leg.move(self.r_leg.current_length, 1, 0)
-            # self.l_leg.move(self.l_leg.current_length, 1, 0)
-            # self.r_leg.extend_to(self.r_leg.current_length, 1,)
-            # self.l_leg.extend_to(self.l_leg.current_length, 1,)
+        cycle_time = 4
+        quarter_time = cycle_time/6
+        sway = 0.22
+        sway_time = quarter_time*0.99
+        leg_angle = 0.2
+        extend_length = 0.1
 
-        if self.i % (240 * 6) == 240 * 4:
-            self.r_leg.move_relative(0, 1, -0.2)
-            self.l_leg.move_relative(0, 1, 0.2)
-        """
-        if self.i % (240 * 6) == 240 * 0:
-            roll = 0.23
-            time = 1
-            self.r_hip_roll.reach_position_in_time(roll, time)
-            self.l_hip_roll.reach_position_in_time(roll, time)
-            self.r_ankle_roll.reach_position_in_time(roll, time)
-            self.l_ankle_roll.reach_position_in_time(roll, time)
-            
-        if self.i % (240 * 4) == 240 * 1:
-            self.r_leg.extend_relative(-0.18, 1)
-            self.l_leg.extend_relative(-0.18, 1)
+        if not self.walking:
+            if self.i % (240 * cycle_time) == 0:
+                # sway right
+                self.sway(sway, sway_time)
+                # move torso upright
+                self.r_leg.move_relative(0, 0, sway_time)
+                self.l_leg.move_relative(0, 0, sway_time)
 
-        elif self.i % (240 * 4) == 240 * 3:
-            self.r_leg.extend_relative(0.18, 1)
-            self.l_leg.extend_relative(0.18, 1)
-        """
+            elif self.i % (240 * cycle_time) == 240 * quarter_time * 1:
+                # pick left leg up
+                # self.r_leg.move(self.r_leg.current_length, 0, sway_time)
+                self.l_leg.move_relative(-extend_length, -leg_angle, sway_time)
+                self.walking = True
+
+        else:
+            if self.i % (240 * cycle_time) == 0:
+                # sway right
+                self.sway(sway, sway_time)
+
+            elif self.i % (240 * cycle_time) == 240 * quarter_time * 1:
+                # pick left leg up
+                self.r_leg.move(self.r_leg.current_length, 0, sway_time)
+                self.l_leg.move_relative(-extend_length, -leg_angle, sway_time)
+
+            elif self.i % (240 * cycle_time) == 240 * quarter_time * 2:
+                self.sway(0, sway_time)
+                self.r_leg.move(self.r_leg.current_length, -leg_angle, sway_time*0.95)
+                self.l_leg.move_relative(extend_length, -leg_angle, sway_time)
+
+            elif self.i % (240 * cycle_time) == 240 * quarter_time * 3:
+                # sway left
+                self.sway(-sway, sway_time)
+
+            elif self.i % (240 * cycle_time) == 240 * quarter_time * 4:
+                # pick right leg up
+                self.r_leg.move_relative(-extend_length, leg_angle, sway_time)
+                self.l_leg.move(self.l_leg.current_length, 0, sway_time)
+
+            elif self.i % (240 * cycle_time) == 240 * quarter_time * 5:
+                self.sway(0, sway_time)
+                self.r_leg.move_relative(extend_length, leg_angle, sway_time)
+                self.l_leg.move(self.r_leg.current_length, leg_angle, sway_time*0.95)
+
+        # keep this, trust me
         self.i += 1
+
+    def sway(self, sway, time):
+        self.r_hip_roll.reach_position_in_time(sway, time)
+        self.l_hip_roll.reach_position_in_time(sway, time)
+        self.r_ankle_roll.reach_position_in_time(sway, time)
+        self.l_ankle_roll.reach_position_in_time(sway, time)
 
 
 class TorgeBot(Bot):
