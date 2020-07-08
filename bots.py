@@ -22,7 +22,6 @@ class Bot(abc.ABC):
         """This method should be called every time_step to update the Bot"""
         self.update()  # custom update specified by the bot
         self.update_controllers()  # streamlined update for all controllers
-        # TODO legs need to be updated first
 
     @abc.abstractmethod
     def update(self):
@@ -136,13 +135,35 @@ class SquatBot(Bot):
         self.i += 1
 
 
+class SquatBot2(Bot):
+    def __init__(self, interface: SimInterface):
+        super().__init__(interface)
+        self.i = 0
+
+        use_smooth_controller = True
+        self.r_leg = self.create_leg_controller(1, use_smooth_controller)
+        self.l_leg = self.create_leg_controller(-1, use_smooth_controller)
+
+    def update(self):
+        time = 8
+        if self.i % (240 * time) == 240 * time / 4:
+            self.r_leg.extend_relative(-0.18, time / 4)
+            self.l_leg.extend_relative(-0.18, time / 4)
+
+        elif self.i % (240 * time) == 240 * time * 3 / 4:
+            self.r_leg.extend_relative(0.18, time / 4)
+            self.l_leg.extend_relative(0.18, time / 4)
+        self.i += 1
+
+
 class SlowMoBot(Bot):
     def __init__(self, interface: SimInterface):
         super().__init__(interface)
         self.i = 0
 
-        self.r_leg = self.create_leg_controller(1, True)
-        self.l_leg = self.create_leg_controller(-1, True)
+        use_smooth_controller = True
+        self.r_leg = self.create_leg_controller(1, use_smooth_controller)
+        self.l_leg = self.create_leg_controller(-1, use_smooth_controller)
 
         self.r_hip_roll = self.create_smooth_motor_controller("RHipRoll")
         self.l_hip_roll = self.create_smooth_motor_controller("LHipRoll")
@@ -150,33 +171,34 @@ class SlowMoBot(Bot):
         self.l_ankle_roll = self.create_smooth_motor_controller("LAnkleRoll")
 
     def update(self):
-        """
         if self.i % (240 * 6) == 240 * 1:
-            #self.r_leg.move_relative(-0, 1, 0.1)
-            #self.l_leg.move_relative(-0, 1, -0.1)
-            #self.r_leg.move(self.r_leg.current_length, 1, 0)
-            #self.l_leg.move(self.l_leg.current_length, 1, 0)
-            self.r_leg.extend_to(self.r_leg.current_length, 1,)
-            self.l_leg.extend_to(self.l_leg.current_length, 1,)
-        if self.i % (240 * 6) == 240 * 4:
-            self.r_leg.move_relative(-0, 1, -0.1)
-            self.l_leg.move_relative(-0, 1, 0.1)
-        if self.i % (240 * 6) == 240 * 0:
+            self.r_leg.move_relative(0, 1, 0.2)
+            self.l_leg.move_relative(0, 1, -0.2)
+            # self.r_leg.move(self.r_leg.current_length, 1, 0)
+            # self.l_leg.move(self.l_leg.current_length, 1, 0)
+            # self.r_leg.extend_to(self.r_leg.current_length, 1,)
+            # self.l_leg.extend_to(self.l_leg.current_length, 1,)
 
+        if self.i % (240 * 6) == 240 * 4:
+            self.r_leg.move_relative(0, 1, -0.2)
+            self.l_leg.move_relative(0, 1, 0.2)
+        """
+        if self.i % (240 * 6) == 240 * 0:
             roll = 0.23
             time = 1
             self.r_hip_roll.reach_position_in_time(roll, time)
             self.l_hip_roll.reach_position_in_time(roll, time)
             self.r_ankle_roll.reach_position_in_time(roll, time)
             self.l_ankle_roll.reach_position_in_time(roll, time)
-            """
-        if self.i % (240 * 6) == 240 * 1:
-            self.r_leg.extend_relative(-0.1, 2)
-            self.l_leg.extend_relative(-0.1, 2)
+            
+        if self.i % (240 * 4) == 240 * 1:
+            self.r_leg.extend_relative(-0.18, 1)
+            self.l_leg.extend_relative(-0.18, 1)
 
-        elif self.i % (240 * 6) == 240 * 4:
-            self.r_leg.extend_relative(0.1, 2)
-            self.l_leg.extend_relative(0.1, 2)
+        elif self.i % (240 * 4) == 240 * 3:
+            self.r_leg.extend_relative(0.18, 1)
+            self.l_leg.extend_relative(0.18, 1)
+        """
         self.i += 1
 
 

@@ -65,11 +65,11 @@ class SmoothMotorController(Controller):
             self.moving = False
             self.current_start_position = self.current_target_position
             self.joint.set_position(self.current_target_position)
-            print("move ended", self.joint.get_position(), self.current_target_position)
+            if self.name is "RKnee":
+                print("move ended", self.current_target_position - self.joint.get_position())
 
         elif self.moving:
             self.joint.set_position(self.get_current_position())
-            print("moving")
 
     def goto_initial_position(self):
         self.joint.set_position(math.radians(self.initial_position))
@@ -78,7 +78,6 @@ class SmoothMotorController(Controller):
         self.current_start_position = self.get_current_position()
         self.current_target_position = position
         delta_position = self.current_target_position - self.current_start_position
-        # FIXME there's an error in the movement, it goes to far, past current_target_position but the timing is correct
 
         self.current_start_time = self.interface.simulation.time
         self.current_target_time = self.current_start_time + time_to_reach
@@ -101,23 +100,23 @@ class SmoothMotorController(Controller):
         tc = self.get_passed_time_of_current_movement()  # ie current time
         assert not tc < 0  # invalid current time since start of the movement
 
+        result = 0
         # first phase
         if tc <= self.t1:
-            print(1)
-            return self.a1 * tc**2 * 0.5
+            result = self.a1 * tc**2 * 0.5
 
         # second phase
         elif tc <= self.t1 + self.t2:
             t = tc - self.t1
-            print(2, tc, t)
-            return (self.a1 * self.t1**2 * 0.5) + (self.v2 * t)
+            result = (self.a1 * self.t1**2 * 0.5) + (self.v2 * t)
 
         # third phase
         elif tc <= 2 * self.t1 + self.t2:
             t = tc - (self.t1 + self.t2)
-            r = (self.a1 * self.t1**2 * 0.5) + (self.v2 * self.t2) + (self.v2 * t - self.a1 * t**2 * 0.5)
-            print(3, tc, t, r)
-            return r
+            result = (self.a1 * self.t1**2 * 0.5) + (self.v2 * self.t2) + (self.v2 * t - self.a1 * t**2 * 0.5)
+
+        return result * 2/3  # dirty fix for my problems (these calculations are 150% of the speed)
+        # breaks again if coasting ratio is changed
 
     def get_name(self):
         return self.name
@@ -258,7 +257,7 @@ class Leg(Controller):
         a_angle = math.asin(self.knee_ankle_length * math.sin(self.angle_b) / b_side)  # law of sines
         c_angle = math.asin(self.hip_knee_length * math.sin(self.angle_b) / b_side)  # law of sines
 
-        self.current_angle = self.hip.initial_position - a_angle
+        self.current_angle = self.hip.initial_position - a_angle  # + self.hip_offset
 
         self.angle_a = a_angle * self.side
         self.angle_c = c_angle * -self.side
@@ -272,6 +271,7 @@ class Leg(Controller):
     def move_relative(self, length_difference, time, angle_difference):
         self.current_angle += angle_difference
         self.extend_relative(length_difference, time)
+        print(self.current_angle)
 
     def move(self, length, time, angle):
         self.current_angle = angle
@@ -290,9 +290,9 @@ class Leg(Controller):
         angles = self.get_list_of_angles(a, b, c)  # angles; 0 top angle, 1 knee angle, 2 ankle angle
         # !!! angles has to be side adjusted !!!
 
-        # calculate motor positions
-        hip_position = self.current_angle - angles[0] * self.side
-        knee_position = (-angles[1] + math.pi) * self.side - self.knee_offset
+        # calculate motor positions  // this is correct, don't change it
+        hip_position = -self.current_angle - angles[0] * self.side
+        knee_position = (math.pi-angles[1]) * self.side - self.knee_offset
         ankle_position = -self.current_angle + angles[2] * self.side
 
         # issue command
@@ -308,7 +308,8 @@ class Leg(Controller):
     def get_list_of_angles(self, a, b, c):
         return [self.angle_from_sides(b, c, a), self.angle_from_sides(c, a, b), self.angle_from_sides(a, b, c)]
 
-    def angle_from_sides(self, a, b, c):
+    @staticmethod
+    def angle_from_sides(a, b, c):
         """a, b, c being the sides of a triangle, returns the angle opposite of c"""
         return math.acos((a*a+b*b-c*c)/(2*a*b))  # cos^-1(law of cosines)
 
