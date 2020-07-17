@@ -16,16 +16,16 @@ class Scheduler:
         print("simulation loaded\n")
 
         self.interface = sim_interface.SimInterface(self.sim)
-        self.timer = timekeeper.Timefixer(self.sim)
+        self.timer = timekeeper.TimeFixer(self.sim)
 
         # chose the control-system for the bot. TODO: make switching more convenient i.e. switching on the fly possible
-        self.control_system = bots.SlowMoBot(self.interface)  # bots.<CurrentBot>(self.interface)
+        self.control_system = bots.FastMoBot(self.interface)  # bots.<CurrentBot>(self.interface)
 
     def run_sim(self):
         while pybullet.isConnected(self.physicsClientId):
             if not self.sim.paused:
                 self.control_system.step()  # updates the bots' control-system
-            self.timer.physicsStep(self.sim)  # step physics
+            self.timer.physics_step()  # step physics
 
         print("\n--simulation terminated--")
 

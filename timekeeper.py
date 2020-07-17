@@ -1,13 +1,68 @@
 import time
-import _collections
 from simulation import Simulation
 
 
-# keeps the sim in realtime (mostly overkill)
+# keeps the sim in realtime (more reasonable I-Controller solution)
+# does not support switching physics sim frequency on the fly (don't know if anyone would do that, just don't do it).
+class TimeFixer:
+    def __init__(self, sim: Simulation):
+        self.sim = sim
+
+        self.pre_step_time = time.time_ns()  # when the last step began
+        self.post_step_time = time.time_ns()  # when the last step ended
+
+        self.desired_loop_time = 1000000000 * sim.time_step  # desired time for the entire loop
+        self.actual_loop_time = 0  # actual time of the last loop
+
+        self.error_over_time = 0  # the integral, i.e tracks the total error
+
+    # this is the main method to use, it calls the sim step and handles timing.
+    def physics_step(self):
+        self.pre_step()
+        self.sim.step()
+        self.post_step()
+
+    # reports how much time you are not using between physics steps
+    def physics_step_report_time_left(self):
+        self.time_left()
+        self.physics_step()
+
+    # Should be called before the sim step
+    def pre_step(self):
+        #  (how long the loop should be -how long the calculations took -integral) converted from nanoseconds to seconds
+        sleep_time = (self.desired_loop_time - (time.time_ns() - self.post_step_time) - self.error_over_time)/1000000000
+        if sleep_time > 0:
+            time.sleep(sleep_time)  # some time has passed since time.time_ns() but  error_over_time will correct that
+        self.pre_step_time = time.time_ns()  # record time
+
+    # Should be called after the sim step
+    def post_step(self):
+        # updating times and calculating the last loop duration
+        old_post_step_time = self.post_step_time
+        self.post_step_time = time.time_ns()
+        self.actual_loop_time = self.post_step_time - old_post_step_time
+
+        error = self.actual_loop_time - self.desired_loop_time  # calculate the error of this loop
+        self.error_over_time += error  # add the error to the integral
+
+    # prints and returns how much percent of your time have passed since the last step (last call of postStep)
+    def time_left(self):
+        t = (self.post_step_time - time.time_ns()) / self.desired_loop_time * 100
+        print(t, "% time used between physics steps")
+        return t
+
+    # optional use just before loop starts if time between __init__ and the first step is longer than desired_loop_time
+    def set_last_time_step(self):
+        self.post_step_time = time.time_ns()
+
+
+# keeps the sim in realtime (mostly overkill and not used)
+# does not support switching physics sim frequency on the fly
 class Timekeeper:
     def __init__(self, sim: Simulation):
+        self.sim = sim
         self.post_step_time = time.time_ns()  # when the last step ended
-        self.preStepTime = time.time_ns()  # when the last step began
+        self.pre_step_time = time.time_ns()  # when the last step began
 
         self.desired_loop_time = 1000000000 * sim.time_step   # desired time for the entire loop
         self.actual_loop_time = 0  # actual time the timekeeper achieved
@@ -17,23 +72,23 @@ class Timekeeper:
 
         self.average_step_duration = 0  # estimate how much time a step takes (most times very small to 0)
 
-    def physicsStep(self, sim: Simulation):
-        self.preStep()
-        sim.step()
-        self.postStep()
+    def physics_step(self):
+        self.pre_step()
+        self.sim.step()
+        self.post_step()
 
     # if timeUse = True reports how much time you are using between physics steps
-    def physicsStepT(self, sim: Simulation):
-        self.timeLeft()
-        self.physicsStep(sim)
+    def physics_step_report_time_left(self):
+        self.time_left()
+        self.physics_step()
 
     # Should be called before the sim step
-    def preStep(self):
+    def pre_step(self):
         time.sleep((self.desired_loop_time-(time.time_ns()-self.post_step_time)-self.delay) / 1000000000)  # nano->sec
-        self.preStepTime = time.time_ns()
+        self.pre_step_time = time.time_ns()
 
     # Should be called after the sim step
-    def postStep(self):
+    def post_step(self):
         old_post_step_time = self.post_step_time
         self.post_step_time = time.time_ns()
         self.actual_loop_time = self.post_step_time - old_post_step_time
@@ -46,85 +101,16 @@ class Timekeeper:
             self.delay += error/2  # TODO write a nifty comment here
             cutoff = True
 
-        self.average_step_duration = (self.average_step_duration + (self.post_step_time - self.preStepTime)) / 2
+        self.average_step_duration = (self.average_step_duration + (self.post_step_time - self.pre_step_time)) / 2
 
         print("error_over_time:", int(error), "\tdesired:", int(self.desired_loop_time), "\tactual:", int(self.actual_loop_time), "\tdelay:", int(self.delay), "\ta-d:", int(self.actual_loop_time - self.delay), "\t", cutoff, "\t", int(self.average_error))
 
     # prints and returns how much percent of your time have passed since the last step (last call of postStep)
-    def timeLeft(self):
+    def time_left(self):
         t = (self.post_step_time - time.time_ns()) / self.desired_loop_time * 100
         print(t, "% time used between physics steps")
         return t
 
     # use just before loop if the time between __init__ and the first step is longer than desired_loop_time
-    def setLastStep(self):
-        self.post_step_time = time.time_ns()
-
-
-# keeps the sim in realtime (mostly overkill)
-class Timefixer:
-    def __init__(self, sim: Simulation):
-        self.post_step_time = time.time_ns()  # when the last step ended
-        self.preStepTime = time.time_ns()  # when the last step began
-
-        self.desired_loop_time = 1000000000 * sim.time_step  # desired time for the entire loop
-        self.actual_loop_time = 0  # actual time the timekeeper achieved
-
-        self.average_error = 0
-        self.error_over_time = 0
-
-        self.average_step_duration = 0  # estimate how much time a step takes (most times very small to 0)
-
-        self.looptimes = _collections.deque()
-
-    def physicsStep(self, sim: Simulation):
-        self.preStep()
-        sim.step()
-        self.postStep()
-
-    # if timeUse = True reports how much time you are using between physics steps
-    def physicsStepT(self, sim: Simulation):
-        self.timeLeft()
-        self.physicsStep(sim)
-
-    # Should be called before the sim step
-    def preStep(self):
-        sleep_time = (self.desired_loop_time - (time.time_ns() - self.post_step_time) - self.error_over_time)/1000000000
-        if sleep_time > 0:
-            time.sleep(sleep_time)  # some time has passed since time.time_ns() but  error_over_time will correct that
-        self.preStepTime = time.time_ns()
-
-    # Should be called after the sim step
-    def postStep(self):
-        old_post_step_time = self.post_step_time
-        self.post_step_time = time.time_ns()
-        self.actual_loop_time = self.post_step_time - old_post_step_time
-
-        error = self.actual_loop_time - self.desired_loop_time
-        self.error_over_time += error
-
-        # DEBUG
-        """
-        if len(self.looptimes) > 200:
-            self.looptimes.popleft()
-        self.looptimes.append(self.actual_loop_time)
-
-        average_looptime = 0
-        for x in self.looptimes:
-            average_looptime += x
-        average_looptime /= len(self.looptimes)
-        
-
-        # print(int(self.error_over_time), int(error), int(self.error_over_time - error), int(average_looptime))
-        """
-        # end DEBUG
-
-    # prints and returns how much percent of your time have passed since the last step (last call of postStep)
-    def timeLeft(self):
-        t = (self.post_step_time - time.time_ns()) / self.desired_loop_time * 100
-        print(t, "% time used between physics steps")
-        return t
-
-    # optional use just before loop if the time between __init__ and the first step is longer than desired_loop_time
-    def setLastStep(self):
+    def set_last_time_step(self):
         self.post_step_time = time.time_ns()
