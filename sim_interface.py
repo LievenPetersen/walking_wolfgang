@@ -1,6 +1,8 @@
 """
 this file has been altered, original file:
 https://github.com/bit-bots/wolfgang_robot/blob/master/wolfgang_pybullet_sim/src/wolfgang_pybullet_sim/ros_interface.py
+
+Don't look too hard, this is basically the repurposed ROS interface with multiple open wounds.
 """
 
 from simulation import Simulation

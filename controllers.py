@@ -1,23 +1,7 @@
 import math
 import abc
 
-import pybullet as p
-
 from sim_interface import SimInterface
-
-
-class IController:
-    def __init__(self, initial_point):
-        self.integral = 0
-        self.last_actual_point = initial_point
-        self.last_desired_point = initial_point
-
-    def input(self, desired_point, actual_point):
-        self.integral += desired_point - self.last_desired_point - (actual_point - self.last_actual_point)
-        self.last_actual_point = actual_point
-
-    def output(self):
-        return self.integral
 
 
 class Controller:
@@ -250,8 +234,9 @@ class Leg(Controller):
 
     def init_starting_triangle(self):
         self.angle_b = - math.pi * self.side + self.knee.initial_position + self.knee_offset
+        # law of cosines:
         b_side = math.sqrt(self.knee_ankle_length * self.knee_ankle_length + self.hip_knee_length * self.hip_knee_length
-                           - 2 * self.knee_ankle_length * self.hip_knee_length * math.cos(self.angle_b))  # law of cosines
+                           - 2 * self.knee_ankle_length * self.hip_knee_length * math.cos(self.angle_b))
         a_angle = math.asin(self.knee_ankle_length * math.sin(self.angle_b) / b_side)  # law of sines
         c_angle = math.asin(self.hip_knee_length * math.sin(self.angle_b) / b_side)  # law of sines
 
@@ -260,7 +245,8 @@ class Leg(Controller):
         self.angle_a = a_angle * self.side
         self.angle_c = c_angle * -self.side
         self.current_length = b_side
-        print("Initialization:: angles:", a_angle, self.angle_b, c_angle, "lengths:", self.knee_ankle_length, b_side, self.hip_knee_length)
+        print("Initialization:: angles:", a_angle, self.angle_b, c_angle, "lengths:",
+              self.knee_ankle_length, b_side, self.hip_knee_length)
         print("current angle:", self.current_angle, "hip position:", self.hip.joint.get_position())
 
     def update(self):
@@ -314,3 +300,19 @@ class Leg(Controller):
         self.hip.joint.set_position(self.hip_offset)
         self.knee.joint.set_position(self.knee_offset)
         self.ankle.joint.set_position(self.ankle_offset)
+
+
+class IController:
+    """This i-controller ended up not being used and has never been tested"""
+
+    def __init__(self, initial_point):
+        self.integral = 0
+        self.last_actual_point = initial_point
+        self.last_desired_point = initial_point
+
+    def input(self, desired_point, actual_point):
+        self.integral += desired_point - self.last_desired_point - (actual_point - self.last_actual_point)
+        self.last_actual_point = actual_point
+
+    def output(self):
+        return self.integral

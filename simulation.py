@@ -106,26 +106,26 @@ class Simulation:
         single_step = False
         if self.gui:
             # reset if R-key was pressed
-            rKey = ord('r')
-            nKey = ord('n')
-            sKey = ord('s')
-            fKey = ord('f')
-            spaceKey = p.B3G_SPACE
+            r_key = ord('r')
+            n_key = ord('n')
+            s_key = ord('s')
+            f_key = ord('f')
+            space_key = p.B3G_SPACE
             keys = p.getKeyboardEvents()
-            if rKey in keys and keys[rKey] & p.KEY_WAS_TRIGGERED:
+            if r_key in keys and keys[r_key] & p.KEY_WAS_TRIGGERED:
                 self.reset()
-            if spaceKey in keys and keys[spaceKey] & p.KEY_WAS_TRIGGERED:
+            if space_key in keys and keys[space_key] & p.KEY_WAS_TRIGGERED:
                 self.paused = not self.paused
-            if sKey in keys and keys[sKey] & p.KEY_IS_DOWN:
+            if s_key in keys and keys[s_key] & p.KEY_IS_DOWN:
                 single_step = True
-            if nKey in keys and keys[nKey] & p.KEY_WAS_TRIGGERED:
+            if n_key in keys and keys[n_key] & p.KEY_WAS_TRIGGERED:
                 if self.gravity:
                     p.setGravity(0, 0, 0)
                 else:
                     p.setGravity(0, 0, -9.81)
                 self.gravity = not self.gravity
 
-            if fKey in keys and keys[fKey] and p.KEY_WAS_TRIGGERED:
+            if f_key in keys and keys[f_key] and p.KEY_WAS_TRIGGERED:
                 self.follow_camera = not self.follow_camera
             backspace_key = p.B3G_BACKSPACE
             if backspace_key in keys and keys[backspace_key] & p.KEY_WAS_TRIGGERED:
