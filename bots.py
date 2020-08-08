@@ -192,9 +192,9 @@ class SlowMoBot(Bot):
         self.walking = False
 
     def update(self):
-        cycle_time = 1.5  # touch this
+        cycle_time = 6  # touch this
         quarter_time = cycle_time/6
-        sway = 0.09  # and this. But the rest can be fragile
+        sway = 0.2  # and this. But the rest can be fragile
         move_time = quarter_time - 0.01  # *0.8  # there needs to be a small time gap between moves
         leg_angle = 0.2
         extend_length = 0.1
@@ -335,7 +335,7 @@ class TorgeBot(Bot):
     def __init__(self, interface: SimInterface):
         super().__init__(interface)
         print(interface.simulation.joints)
-        self.head_pitch = controllers.MotorController("RHipPitch", interface)
+        self.head_pitch = controllers.MotorController("HeadTilt", interface)
 
         self.i = 0
 
@@ -346,10 +346,10 @@ class TorgeBot(Bot):
             print("hold")
 
         if self.i % (240 * 4) == 240 * 0:
-            self.head_pitch.joint.set_torque(-0.1)
+            self.head_pitch.joint.set_torque(-1)
             print("-")
         elif self.i % (240 * 4) == 240 * 2:
-            self.head_pitch.joint.set_torque(0.1)
+            self.head_pitch.joint.set_torque(1)
             print("+")
 
         self.i += 1

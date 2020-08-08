@@ -24,6 +24,8 @@ class SmoothMotorController(Controller):
         self.joint = interface.get_joint(name)  # joint object
         self.initial_position = math.radians(interface.get_initial_joint_position(name))
 
+        self.coasting_ratio = 0.5  # percentage of non accelerated time in between acceleration phases of a movement
+
         self.i_controller = IController(self.initial_position)
 
         self.moving = False  # true while executing a movement
@@ -72,10 +74,9 @@ class SmoothMotorController(Controller):
             3. Phase: constant -acceleration until standstill
         The relative time of each phase is always the same ratio, defined by coasting_ratio.
         """
-        coasting_ratio = 0.5  # percentage of non accelerated time in between acceleration phases of a movement
-        self.t1 = time_to_reach * (1 - coasting_ratio) / 2  # time of phase 1 or phase 3
-        self.t2 = time_to_reach * coasting_ratio  # time of phase 2
-        self.v2 = delta_position / self.t2  # speed during phase 2
+        self.t1 = time_to_reach * (1 - self.coasting_ratio) / 2  # time of phase 1 or phase 3
+        self.t2 = time_to_reach * self.coasting_ratio  # time of phase 2
+        self.v2 = delta_position / (self.t1 + self.t2)  # speed during phase 2
         self.a1 = self.v2 / self.t1  # acceleration during phase 1 or -acceleration of phase 3
 
     def get_moving_position(self):
@@ -97,8 +98,7 @@ class SmoothMotorController(Controller):
             t = tc - (self.t1 + self.t2)
             result = (self.a1 * self.t1**2 * 0.5) + (self.v2 * self.t2) + (self.v2 * t - self.a1 * t**2 * 0.5)
 
-        return result * 2/3  # dirty fix for my problems (these calculations are 150% of the speed)
-        # breaks again if coasting ratio is changed
+        return result
 
     def get_name(self):
         return self.name
@@ -271,14 +271,14 @@ class Leg(Controller):
         a = self.knee_ankle_length
         b = length
         angles = self.get_list_of_angles(a, b, c)  # angles; 0 top angle, 1 knee angle, 2 ankle angle
-        # !!! angles has to be side adjusted !!!
+        # note: angles[x] has to be side adjusted!
 
         # calculate motor positions  // this is correct, don't change it
         hip_position = -self.current_angle - angles[0] * self.side
-        knee_position = (math.pi-angles[1]) * self.side - self.knee_offset
+        knee_position = (math.pi - angles[1]) * self.side - self.knee_offset
         ankle_position = -self.current_angle + angles[2] * self.side
 
-        # issue command
+        # issue commands
         self.hip.reach_position_in_time(hip_position, time)
         self.knee.reach_position_in_time(knee_position, time)
         self.ankle.reach_position_in_time(ankle_position, time)
@@ -296,7 +296,10 @@ class Leg(Controller):
         """a, b, c being the sides of a triangle, returns the angle opposite of c"""
         return math.acos((a*a+b*b-c*c)/(2*a*b))  # cos^-1(law of cosines)
 
-    def null(self):
+    def straighten_motors(self):
+        """moves the motors into their respective 0 positions, according to their offset.
+        This method is used for debugging offsets
+        """
         self.hip.joint.set_position(self.hip_offset)
         self.knee.joint.set_position(self.knee_offset)
         self.ankle.joint.set_position(self.ankle_offset)
